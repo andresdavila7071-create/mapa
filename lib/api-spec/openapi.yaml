@@ -1,0 +1,151 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: places
+    description: Real destination places
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /places/search:
+    get:
+      operationId: searchTouristPlaces
+      tags: [places]
+      summary: Search tourist places for a destination
+      description: Finds real tourist places near a destination using OpenStreetMap data.
+      parameters:
+        - name: destination
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+            default: 8
+      responses:
+        "200":
+          description: Tourist places found for the destination
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TouristPlace"
+        "400":
+          description: Invalid destination query
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+  /places/geocode:
+    get:
+      operationId: geocodeDestination
+      tags: [places]
+      summary: Find a destination on the map
+      description: Geocodes a country, city, or place using OpenStreetMap Nominatim.
+      parameters:
+        - name: destination
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+      responses:
+        "200":
+          description: Destination location
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeocodedDestination"
+        "404":
+          description: Destination not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    TouristPlace:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        category:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        address:
+          type: ["string", "null"]
+        source:
+          type: string
+      required:
+        - id
+        - name
+        - category
+        - latitude
+        - longitude
+        - address
+        - source
+    GeocodedDestination:
+      type: object
+      properties:
+        displayName:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        source:
+          type: string
+      required:
+        - displayName
+        - latitude
+        - longitude
+        - source
+
